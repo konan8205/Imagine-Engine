@@ -1,0 +1,90 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="E:\Temp\IETemp\Source\Core\Console.cpp">
+      <Filter>Source\Core</Filter>
+    </ClCompile>
+    <ClCompile Include="E:\Temp\IETemp\Source\Render\Vulkan\Platform\VulkanSurfaceWindows.cpp">
+      <Filter>Source\Render\Vulkan\Platform</Filter>
+    </ClCompile>
+    <ClCompile Include="E:\Temp\IETemp\Source\Render\Vulkan\Vulkan.cpp">
+      <Filter>Source\Render\Vulkan</Filter>
+    </ClCompile>
+    <ClCompile Include="E:\Temp\IETemp\Source\Render\Vulkan\VulkanCommandBuffer.cpp">
+      <Filter>Source\Render\Vulkan</Filter>
+    </ClCompile>
+    <ClCompile Include="E:\Temp\IETemp\Source\Render\Vulkan\VulkanDevice.cpp">
+      <Filter>Source\Render\Vulkan</Filter>
+    </ClCompile>
+    <ClCompile Include="E:\Temp\IETemp\Source\Render\Vulkan\VulkanFrameBuffer.cpp">
+      <Filter>Source\Render\Vulkan</Filter>
+    </ClCompile>
+    <ClCompile Include="E:\Temp\IETemp\Source\Render\Vulkan\VulkanPipeline.cpp">
+      <Filter>Source\Render\Vulkan</Filter>
+    </ClCompile>
+    <ClCompile Include="E:\Temp\IETemp\Source\Render\Vulkan\VulkanSwapchain.cpp">
+      <Filter>Source\Render\Vulkan</Filter>
+    </ClCompile>
+    <ClCompile Include="E:\Temp\IETemp\Source\main.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="E:\Temp\IETemp\Source\Core\Console.h">
+      <Filter>Source\Core</Filter>
+    </ClInclude>
+    <ClInclude Include="E:\Temp\IETemp\Source\Core\CoreHeader.h">
+      <Filter>Source\Core</Filter>
+    </ClInclude>
+    <ClInclude Include="E:\Temp\IETemp\Source\Core\CoreInfo.h">
+      <Filter>Source\Core</Filter>
+    </ClInclude>
+    <ClInclude Include="E:\Temp\IETemp\Source\Core\FileManager.h">
+      <Filter>Source\Core</Filter>
+    </ClInclude>
+    <ClInclude Include="E:\Temp\IETemp\Source\Render\Vulkan\Platform\VulkanSurfaceWindows.h">
+      <Filter>Source\Render\Vulkan\Platform</Filter>
+    </ClInclude>
+    <ClInclude Include="E:\Temp\IETemp\Source\Render\Vulkan\Vulkan.h">
+      <Filter>Source\Render\Vulkan</Filter>
+    </ClInclude>
+    <ClInclude Include="E:\Temp\IETemp\Source\Render\Vulkan\VulkanCommandBuffer.h">
+      <Filter>Source\Render\Vulkan</Filter>
+    </ClInclude>
+    <ClInclude Include="E:\Temp\IETemp\Source\Render\Vulkan\VulkanDevice.h">
+      <Filter>Source\Render\Vulkan</Filter>
+    </ClInclude>
+    <ClInclude Include="E:\Temp\IETemp\Source\Render\Vulkan\VulkanFrameBuffer.h">
+      <Filter>Source\Render\Vulkan</Filter>
+    </ClInclude>
+    <ClInclude Include="E:\Temp\IETemp\Source\Render\Vulkan\VulkanHeader.h">
+      <Filter>Source\Render\Vulkan</Filter>
+    </ClInclude>
+    <ClInclude Include="E:\Temp\IETemp\Source\Render\Vulkan\VulkanPipeline.h">
+      <Filter>Source\Render\Vulkan</Filter>
+    </ClInclude>
+    <ClInclude Include="E:\Temp\IETemp\Source\Render\Vulkan\VulkanSwapchain.h">
+      <Filter>Source\Render\Vulkan</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <CustomBuild Include="E:\Temp\IETemp\CMakeLists.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="Source\Core">
+      <UniqueIdentifier>{3F941734-FDAA-3891-B926-4B96AB335FEA}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source\Render">
+      <UniqueIdentifier>{CDF23105-BED4-3449-8C24-6B8901E89FB2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source">
+      <UniqueIdentifier>{C9EAB755-8B4E-36B7-B8D0-CBF9F8184592}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source\Render\Vulkan\Platform">
+      <UniqueIdentifier>{EC7C121B-EFA0-3508-9FFF-B0FA04B73A5D}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source\Render\Vulkan">
+      <UniqueIdentifier>{7985FEFE-80E4-37BC-859A-82B5A6059058}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>

@@ -1,0 +1,44 @@
+#pragma once
+
+#include "Render/Vulkan/VulkanHeader.h"
+#include "Render/Vulkan/VulkanSwapchain.h"
+#include "Render/Vulkan/VulkanFrameBuffer.h"
+
+class VulkanSwapChain;
+class VulkanRenderPass;
+
+struct VulkanShaderModule {
+	VkShaderModule shaderModule;
+	char* name = NULL;
+};
+
+class VulkanGraphicsPipeline
+{
+	/* Variables */
+public:
+	VulkanSwapChain* SwapChainClass;
+	VulkanRenderPass* RenderPassClass;
+	VkDevice* device;
+	
+	VkPipelineLayout pipelineLayout;
+	VkPipeline graphicsPipeline;
+
+	/* Functions */
+public:
+	VulkanGraphicsPipeline(
+		VulkanSwapChain* _SwapChainClass,
+		VulkanRenderPass* RenderPassClass,
+		VkDevice* _device);
+	~VulkanGraphicsPipeline();
+
+	VkShaderModule CreateShaderModule(const vector<char>& _code);
+	inline void DestroyShaderModule(VkShaderModule _shaderModule) {
+		vkDestroyShaderModule(*device, _shaderModule, NULL);
+	}
+
+	bool CreateGraphicsPipeline(vector<VulkanShaderModule>& _shaderModuleList);
+	inline void DestroyGraphicsPipeline() {
+		vkDestroyPipeline(*device, graphicsPipeline, NULL);
+		vkDestroyPipelineLayout(*device, pipelineLayout, NULL);
+	}
+};
