@@ -71,8 +71,11 @@
     <CustomBuild Include="D:\Workspace\Cpp\Imagine-Engine\CMakeLists.txt" />
   </ItemGroup>
   <ItemGroup>
-    <Filter Include="Source">
-      <UniqueIdentifier>{7587F297-0A8B-305E-8E72-756517AEF851}</UniqueIdentifier>
+    <Filter Include="Source\Render\Vulkan\Platform">
+      <UniqueIdentifier>{7E9988F1-3D68-3B20-B447-765CE5011576}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source\Render\Vulkan">
+      <UniqueIdentifier>{D479F86E-C595-3D34-A223-4BEFC20BAF8A}</UniqueIdentifier>
     </Filter>
     <Filter Include="Source\Core">
       <UniqueIdentifier>{95052FC1-DC82-3B88-94D9-EFBE2F6F116C}</UniqueIdentifier>
@@ -80,11 +83,8 @@
     <Filter Include="Source\Render">
       <UniqueIdentifier>{E45EC2AB-95FE-37A2-9572-F944321B761A}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source\Render\Vulkan">
-      <UniqueIdentifier>{D479F86E-C595-3D34-A223-4BEFC20BAF8A}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Source\Render\Vulkan\Platform">
-      <UniqueIdentifier>{7E9988F1-3D68-3B20-B447-765CE5011576}</UniqueIdentifier>
+    <Filter Include="Source">
+      <UniqueIdentifier>{7587F297-0A8B-305E-8E72-756517AEF851}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
 </Project>

@@ -7,11 +7,6 @@
 class VulkanSwapChain;
 class VulkanRenderPass;
 
-struct VulkanShaderModule {
-	VkShaderModule shaderModule;
-	char* name = NULL;
-};
-
 class VulkanGraphicsPipeline
 {
 	/* Variables */
@@ -36,7 +31,7 @@ public:
 		vkDestroyShaderModule(*device, _shaderModule, NULL);
 	}
 
-	bool CreateGraphicsPipeline(vector<VulkanShaderModule>& _shaderModuleList);
+	bool CreateGraphicsPipeline();
 	inline void DestroyGraphicsPipeline() {
 		vkDestroyPipeline(*device, graphicsPipeline, NULL);
 		vkDestroyPipelineLayout(*device, pipelineLayout, NULL);

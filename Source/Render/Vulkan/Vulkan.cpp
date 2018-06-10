@@ -100,22 +100,8 @@ bool Vulkan::Initialize()
 	}
 
 	graphicsPipelineClass = new VulkanGraphicsPipeline(swapChainClass, renderPassClass, &deviceClass->device);
-	
-	vector<char> vertShaderModule = FileManager::ReadBinary("../Cache/vert.spv");
-	vector<char> fragShaderModule = FileManager::ReadBinary("../Cache/frag.spv");
 
-	if (vertShaderModule.size() == 0 || fragShaderModule.size() == 0) {
-		return false;
-	}
-
-	vector<VulkanShaderModule> shaderModuleList;
-	shaderModuleList.resize(2);
-	shaderModuleList[0].shaderModule = graphicsPipelineClass->CreateShaderModule(vertShaderModule);
-	shaderModuleList[0].name = "vert";
-	shaderModuleList[1].shaderModule = graphicsPipelineClass->CreateShaderModule(fragShaderModule);
-	shaderModuleList[1].name = "frag";
-
-	if (!graphicsPipelineClass->CreateGraphicsPipeline(shaderModuleList)) {
+	if (!graphicsPipelineClass->CreateGraphicsPipeline()) {
 		return false;
 	}
 	

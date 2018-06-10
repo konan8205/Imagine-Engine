@@ -31,22 +31,41 @@ VkShaderModule VulkanGraphicsPipeline::CreateShaderModule(const vector<char>& _c
 
 	if (result != VK_SUCCESS) {
 		throw std::runtime_error("Failed to create shader module");
+		return (VkShaderModule)NULL;
 	}
 
 	return shaderModule;
 }
 
-bool VulkanGraphicsPipeline::CreateGraphicsPipeline(vector<VulkanShaderModule>& _shaderModuleStructList)
+bool VulkanGraphicsPipeline::CreateGraphicsPipeline()
 {
 	VkResult result;
 
-	vector<VkPipelineShaderStageCreateInfo> shaderStageList(_shaderModuleStructList.size());
-	for (uint32_t i = 0; i < _shaderModuleStructList.size(); ++i) {
-		shaderStageList[i].sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
-		shaderStageList[i].stage = VK_SHADER_STAGE_VERTEX_BIT;
-		shaderStageList[i].module = _shaderModuleStructList[i].shaderModule;
-		shaderStageList[i].pName = _shaderModuleStructList[i].name;
+	vector<char> vertShaderCode = FileManager::ReadBinary("../Cache/vert.spv");
+	vector<char> fragShaderCode = FileManager::ReadBinary("../Cache/frag.spv");
+
+	VkShaderModule vertShaderModule = CreateShaderModule(vertShaderCode);
+	VkShaderModule fragShaderModule = CreateShaderModule(fragShaderCode);
+
+	if (vertShaderModule == (VkShaderModule)NULL ||
+		fragShaderModule == (VkShaderModule)NULL)
+	{
+		return false;
 	}
+
+	VkPipelineShaderStageCreateInfo vertShaderStageInfo = {};
+	vertShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+	vertShaderStageInfo.stage = VK_SHADER_STAGE_VERTEX_BIT;
+	vertShaderStageInfo.module = vertShaderModule;
+	vertShaderStageInfo.pName = "main";
+
+	VkPipelineShaderStageCreateInfo fragShaderStageInfo = {};
+	fragShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+	fragShaderStageInfo.stage = VK_SHADER_STAGE_FRAGMENT_BIT;
+	fragShaderStageInfo.module = fragShaderModule;
+	fragShaderStageInfo.pName = "main";
+
+	VkPipelineShaderStageCreateInfo shaderStages[] = { vertShaderStageInfo, fragShaderStageInfo };
 
 	VkPipelineVertexInputStateCreateInfo vertexInputInfo = {};
 	vertexInputInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
@@ -128,8 +147,8 @@ bool VulkanGraphicsPipeline::CreateGraphicsPipeline(vector<VulkanShaderModule>& 
 
 	VkGraphicsPipelineCreateInfo pipelineInfo = {};
 	pipelineInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
-	pipelineInfo.stageCount = (uint32_t)shaderStageList.size();
-	pipelineInfo.pStages = shaderStageList.data();
+	pipelineInfo.stageCount = 2;
+	pipelineInfo.pStages = shaderStages;
 	pipelineInfo.pVertexInputState = &vertexInputInfo;
 	pipelineInfo.pInputAssemblyState = &inputAssembly;
 	pipelineInfo.pViewportState = &viewportState;
@@ -150,9 +169,8 @@ bool VulkanGraphicsPipeline::CreateGraphicsPipeline(vector<VulkanShaderModule>& 
 		return false;
 	}
 
-	for (VulkanShaderModule iter : _shaderModuleStructList) {
-		DestroyShaderModule(iter.shaderModule);
-	}
+	vkDestroyShaderModule(*device, fragShaderModule, nullptr);
+	vkDestroyShaderModule(*device, vertShaderModule, nullptr);
 
 	return true;
 }
