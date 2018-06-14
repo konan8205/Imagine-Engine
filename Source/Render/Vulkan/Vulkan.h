@@ -5,8 +5,10 @@
 #include "Render/Vulkan/VulkanDevice.h"
 #include "Render/Vulkan/VulkanCommandBuffer.h"
 #include "Render/Vulkan/VulkanSwapChain.h"
+#include "Render/Vulkan/VulkanRenderPass.h"
 #include "Render/Vulkan/VulkanFrameBuffer.h"
 #include "Render/Vulkan/VulkanPipeline.h"
+#include "Render/Vulkan/VulkanQueue.h"
 
 #ifdef _WIN32
 #include "Render/Vulkan/Platform/VulkanSurfaceWindows.h"
@@ -15,12 +17,13 @@
 #include <fstream>
 
 class VulkanDevice;
-class VulkanCommandBuffer;
 class VulkanSurface;
 class VulkanSwapChain;
 class VulkanRenderPass;
 class VulkanFrameBuffer;
 class VulkanGraphicsPipeline;
+class VulkanCommandBuffer;
+class VulkanQueue;
 
 struct VulkanCreateInfo
 {
@@ -47,6 +50,10 @@ public:
 	VulkanRenderPass* renderPassClass;
 	VulkanFrameBuffer* frameBufferClass;
 	VulkanGraphicsPipeline* graphicsPipelineClass;
+	VulkanQueue* queueClass;
+
+	uint32_t currentFrame;
+	uint32_t maxFrame;
 	
 #ifdef _DEBUG
 	VkDebugReportCallbackEXT callback;
@@ -64,6 +71,7 @@ public:
 	bool Initialize();
 	void DeInitialize();
 	bool Update();
+	bool Render();
 
 	inline void SetDisableMultiThreadRendering(bool boolTemp) {
 		bDisableMultiThreadRendering = boolTemp;

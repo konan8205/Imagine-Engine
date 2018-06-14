@@ -2,12 +2,12 @@
 #include "Render/Vulkan/VulkanPipeline.h"
 
 VulkanGraphicsPipeline::VulkanGraphicsPipeline(
+	VkDevice* _device,
 	VulkanSwapChain* _SwapChainClass,
-	VulkanRenderPass* _RenderPassClass,
-	VkDevice* _device)
-	: SwapChainClass(_SwapChainClass)
+	VulkanRenderPass* _RenderPassClass)
+	: device(_device)
+	, SwapChainClass(_SwapChainClass)
 	, RenderPassClass(_RenderPassClass)
-	, device(_device)
 {
 
 }
@@ -37,7 +37,7 @@ VkShaderModule VulkanGraphicsPipeline::CreateShaderModule(const vector<char>& _c
 	return shaderModule;
 }
 
-bool VulkanGraphicsPipeline::CreateGraphicsPipeline()
+VkResult VulkanGraphicsPipeline::CreateGraphicsPipeline()
 {
 	VkResult result;
 
@@ -50,7 +50,7 @@ bool VulkanGraphicsPipeline::CreateGraphicsPipeline()
 	if (vertShaderModule == (VkShaderModule)NULL ||
 		fragShaderModule == (VkShaderModule)NULL)
 	{
-		return false;
+		return VK_ERROR_INITIALIZATION_FAILED;
 	}
 
 	VkPipelineShaderStageCreateInfo vertShaderStageInfo = {};
@@ -142,7 +142,7 @@ bool VulkanGraphicsPipeline::CreateGraphicsPipeline()
 	result = vkCreatePipelineLayout(*device, &pipelineLayoutInfo, NULL, &pipelineLayout);
 	if (result != VK_SUCCESS) {
 		throw std::runtime_error("Failed to create pipeline layout");
-		return false;
+		return result;
 	}
 
 	VkGraphicsPipelineCreateInfo pipelineInfo = {};
@@ -166,11 +166,11 @@ bool VulkanGraphicsPipeline::CreateGraphicsPipeline()
 	result = vkCreateGraphicsPipelines(*device, VK_NULL_HANDLE, 1, &pipelineInfo, NULL, &graphicsPipeline);
 	if (result != VK_SUCCESS) {
 		throw std::runtime_error("Failed to create graphics pipeline");
-		return false;
+		return result;
 	}
 
 	vkDestroyShaderModule(*device, fragShaderModule, nullptr);
 	vkDestroyShaderModule(*device, vertShaderModule, nullptr);
 
-	return true;
+	return result;
 }

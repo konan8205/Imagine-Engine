@@ -4,16 +4,17 @@
 #include "Render/Vulkan/Vulkan.h"
 
 class Vulkan;
+class VulkanSurface;
 
-struct VulkanPhysicalDevice
+struct VulkanQueueFamilyStruct
 {
-	VkPhysicalDevice* pDevice = NULL;
-
 	vector<VkQueueFamilyProperties> queueFamilyProps;
 
 	uint32_t graphicsQueueIndex = UINT32_MAX;
 	uint32_t computeQueueIndex = UINT32_MAX;
 	uint32_t transferQueueIndex = UINT32_MAX;
+
+	uint32_t presentQueueIndex = UINT32_MAX;
 };
 
 struct VulkanDeviceCreateInfo
@@ -27,19 +28,22 @@ class VulkanDevice
 public:
 	// Parent class
 	const Vulkan* VulkanClass;
+	const VulkanSurface* SurfaceClass;
 
 	vector<const char *> deviceLayerNames;
 	vector<const char *> deviceExtensionNames;
 	
-	// Chosen physical device
-	VulkanPhysicalDevice pDeviceStruct;
 	vector<VkPhysicalDevice> pDeviceList;
 	vector<VkPhysicalDeviceGroupProperties> pDeviceGroupList;
+	VulkanQueueFamilyStruct queueFamilyStruct;
+
+	// physical device of logical device
+	VkPhysicalDevice* pDevice;
 	VkDevice device;
 
 	/* Functions */
 public:
-	VulkanDevice(Vulkan* _VulkanClass);
+	VulkanDevice(Vulkan* _VulkanClass, VulkanSurface* _SurfaceClass);
 	~VulkanDevice();
 
 	bool Initialize(const VulkanDeviceCreateInfo _createInfo);
@@ -50,12 +54,13 @@ public:
 private:
 	VkResult EnumeratePhysicalDevice();
 	VkResult EnumeratePhysicalDeviceGroup();
-	bool SetupQueueFamilyProperties(VulkanPhysicalDevice& _pDeviceStruct);
+	VulkanQueueFamilyStruct GetQueueFamilyProperties(VkPhysicalDevice* _pDevice);
 	VkResult CreateDevice(
-		VkPhysicalDevice _pDevice,
-		const uint32_t _queueFamilyIndex,
+		VkPhysicalDevice* _pDevice,
+		VulkanQueueFamilyStruct _queueFamilyStruct,
 		VulkanDeviceCreateInfo _createInfo);
 	inline void DestroyDevice() {
+		pDevice = NULL;
 		vkDestroyDevice(device, NULL);
 	}
 };

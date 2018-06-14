@@ -2,13 +2,14 @@
 #include "Render/Vulkan/VulkanSwapchain.h"
 
 VulkanSwapChain::VulkanSwapChain(
-	VulkanSurface* _VulkanSurfaceClass,
-	VulkanPhysicalDevice* _pDeviceStruct,
-	VkDevice* _device)
-	: VulkanSurfaceClass(_VulkanSurfaceClass)
-	, pDeviceStruct(_pDeviceStruct)
+	VkPhysicalDevice* _pDevice,
+	VulkanQueueFamilyStruct* _queueFamilyStruct,
+	VkDevice* _device,
+	VulkanSurface* _SurfaceClass)
+	: pDevice(_pDevice)
+	, queueFamilyStruct(_queueFamilyStruct)
 	, device(_device)
-	
+	, SurfaceClass(_SurfaceClass)
 {
 
 }
@@ -18,13 +19,53 @@ VulkanSwapChain::~VulkanSwapChain()
 
 }
 
-bool VulkanSwapChain::CreateSwapChain()
+bool VulkanSwapChain::Initialize()
+{
+	VkResult result;
+
+	result = CreateSwapChain();
+	if (result != VK_SUCCESS) {
+		return false;
+	}
+	result = CreateImageView();
+	if (result != VK_SUCCESS) {
+		return false;
+	}
+	result = CreateSemaphore_();
+	if (result != VK_SUCCESS) {
+		return false;
+	}
+
+	return true;
+}
+
+VkResult VulkanSwapChain::AcquireImage(uint32_t _imageIndex)
+{
+	VkResult result;
+	result = vkAcquireNextImageKHR(
+		*device,
+		swapChain,
+		10,
+		renderFinishedSemaphoreList[_imageIndex],
+		VK_NULL_HANDLE,
+		&_imageIndex);
+
+	if (result == VK_ERROR_OUT_OF_DATE_KHR) {
+	}
+	else if (result != VK_SUCCESS && result != VK_SUBOPTIMAL_KHR) {
+		throw runtime_error("Failed to acquire swap chain image");
+	}
+
+	return result;
+}
+
+VkResult VulkanSwapChain::CreateSwapChain()
 {
 	/* Helper functions */
 	VulkanSwapChainSupportDetails swapChainSupport = QuerySupportDetails();
-	if (swapChainSupport.success != true) {
+	if (swapChainSupport.result != VK_SUCCESS) {
 		throw runtime_error("Failed to query surface support details");
-		return false;
+		return swapChainSupport.result;
 	}
 
 	VkSurfaceFormatKHR surfaceFormat = ChooseSurfaceFormat(swapChainSupport.formats);
@@ -41,7 +82,7 @@ bool VulkanSwapChain::CreateSwapChain()
 	VkSwapchainCreateInfoKHR swapchainInfo = {};
 	swapchainInfo.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
 	swapchainInfo.pNext = NULL;
-	swapchainInfo.surface = VulkanSurfaceClass->surface;
+	swapchainInfo.surface = SurfaceClass->surface;
 	swapchainInfo.minImageCount = imageCount;
 	swapchainInfo.imageFormat = surfaceFormat.format;
 	swapchainInfo.imageColorSpace = surfaceFormat.colorSpace;
@@ -49,7 +90,11 @@ bool VulkanSwapChain::CreateSwapChain()
 	swapchainInfo.imageArrayLayers = 1;
 	swapchainInfo.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
 
-	uint32_t queueFamilyIndices[] = { pDeviceStruct->graphicsQueueIndex, pDeviceStruct->computeQueueIndex };
+	uint32_t queueFamilyIndices[] = { 
+		queueFamilyStruct->graphicsQueueIndex,
+		queueFamilyStruct->presentQueueIndex,
+	};
+
 	if (queueFamilyIndices[0] != queueFamilyIndices[1]) {
 		swapchainInfo.imageSharingMode = VK_SHARING_MODE_CONCURRENT;
 		swapchainInfo.queueFamilyIndexCount = 2;
@@ -72,33 +117,34 @@ bool VulkanSwapChain::CreateSwapChain()
 
 	if (result != VK_SUCCESS) {
 		throw runtime_error("Failed to create swap chain");
-		return false;
+		return result;
 	}
 
 	vkGetSwapchainImagesKHR(*device, swapChain, &imageCount, NULL);
-	swapChainImages.resize(imageCount);
-	vkGetSwapchainImagesKHR(*device, swapChain, &imageCount, swapChainImages.data());
+	swapChainImageList.resize(imageCount);
+	result = vkGetSwapchainImagesKHR(*device, swapChain, &imageCount, swapChainImageList.data());
+
+	if (result != VK_SUCCESS) {
+		throw runtime_error("Failed to get swapchain image");
+		DestroySwapChain();
+		return result;
+	}
 
 	swapChainImageFormat = surfaceFormat.format;
 	swapChainExtent = extent;
 
-	return true;
+	return result;
 }
 
-bool VulkanSwapChain::RecreateSwapChain()
-{
-	return false;
-}
-
-bool VulkanSwapChain::CreateImageView()
+VkResult VulkanSwapChain::CreateImageView()
 {
 	VkResult result;
 
-	swapChainImageViews.resize(swapChainImages.size());
-	for (uint32_t i = 0; i < swapChainImages.size(); ++i) {
+	swapChainImageViewList.resize(swapChainImageList.size());
+	for (uint32_t i = 0; i < swapChainImageList.size(); ++i) {
 		VkImageViewCreateInfo createInfo = {};
 		createInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
-		createInfo.image = swapChainImages[i];
+		createInfo.image = swapChainImageList[i];
 		createInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
 		createInfo.format = swapChainImageFormat;
 		createInfo.components.r = VK_COMPONENT_SWIZZLE_IDENTITY;
@@ -111,14 +157,57 @@ bool VulkanSwapChain::CreateImageView()
 		createInfo.subresourceRange.baseArrayLayer = 0;
 		createInfo.subresourceRange.layerCount = 1;
 
-		result = vkCreateImageView(*device, &createInfo, NULL, &swapChainImageViews[i]);
+		result = vkCreateImageView(*device, &createInfo, NULL, &swapChainImageViewList[i]);
 
 		if (result != VK_SUCCESS) {
 			throw std::runtime_error("Failed to create image views");
-			return false;
+			--i;
+			do {
+				vkDestroyImageView(*device, swapChainImageViewList[i], NULL);
+				--i;
+			} while (i != 0);
+			swapChainImageList.clear();
+			return result;
 		}
 	}
-	return true;
+	return result;
+}
+
+VkResult VulkanSwapChain::CreateSemaphore_()
+{
+	VkResult result;
+	imageAvailableSemaphoreList.resize(swapChainImageList.size());
+	renderFinishedSemaphoreList.resize(swapChainImageList.size());
+
+	for (uint32_t i = 0; i < imageAvailableSemaphoreList.size(); ++i) {
+		VkSemaphoreCreateInfo semaphoreInfo = {};
+		semaphoreInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
+		result = vkCreateSemaphore(*device, &semaphoreInfo, nullptr, &imageAvailableSemaphoreList[i]);
+		if (result != VK_SUCCESS) {
+			--i;
+			do {
+				vkDestroySemaphore(*device, imageAvailableSemaphoreList[i], NULL);
+				--i;
+			} while (i != 0);
+			return result;
+		}
+	}
+
+	for (uint32_t i = 0; i < renderFinishedSemaphoreList.size(); ++i) {
+		VkSemaphoreCreateInfo semaphoreInfo = {};
+		semaphoreInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
+		result = vkCreateSemaphore(*device, &semaphoreInfo, nullptr, &renderFinishedSemaphoreList[i]);
+		if (result != VK_SUCCESS) {
+			--i;
+			do {
+				vkDestroySemaphore(*device, renderFinishedSemaphoreList[i], NULL);
+				--i;
+			} while (i != 0);
+			return result;
+		}
+	}
+	
+	return result;
 }
 
 VulkanSwapChainSupportDetails VulkanSwapChain::QuerySupportDetails()
@@ -126,13 +215,12 @@ VulkanSwapChainSupportDetails VulkanSwapChain::QuerySupportDetails()
 	VkResult result;
 	VulkanSwapChainSupportDetails details;
 
-	const VkPhysicalDevice* pDevice = pDeviceStruct->pDevice;
-	const VkSurfaceKHR* surface = &VulkanSurfaceClass->surface;
+	const VkSurfaceKHR* surface = &SurfaceClass->surface;
 
 	// Capabilities
 	result = vkGetPhysicalDeviceSurfaceCapabilitiesKHR(*pDevice, *surface, &details.capabilities);
 	if (result != VK_SUCCESS) {
-		details.success = false;
+		details.result = result;
 		return details;
 	}
 
@@ -140,7 +228,7 @@ VulkanSwapChainSupportDetails VulkanSwapChain::QuerySupportDetails()
 	uint32_t formatCount;
 	result = vkGetPhysicalDeviceSurfaceFormatsKHR(*pDevice, *surface, &formatCount, NULL);
 	if (result != VK_SUCCESS) {
-		details.success = false;
+		details.result = result;
 		return details;
 	}
 
@@ -148,7 +236,7 @@ VulkanSwapChainSupportDetails VulkanSwapChain::QuerySupportDetails()
 		details.formats.resize(formatCount);
 		result = vkGetPhysicalDeviceSurfaceFormatsKHR(*pDevice, *surface, &formatCount, details.formats.data());
 		if (result != VK_SUCCESS) {
-			details.success = false;
+			details.result = result;
 			return details;
 		}
 	}
@@ -157,7 +245,7 @@ VulkanSwapChainSupportDetails VulkanSwapChain::QuerySupportDetails()
 	uint32_t presentModeCount;
 	result = vkGetPhysicalDeviceSurfacePresentModesKHR(*pDevice, *surface, &presentModeCount, NULL);
 	if (result != VK_SUCCESS) {
-		details.success = false;
+		details.result = result;
 		return details;
 	}
 
@@ -165,12 +253,12 @@ VulkanSwapChainSupportDetails VulkanSwapChain::QuerySupportDetails()
 		details.presentModes.resize(presentModeCount);
 		result = vkGetPhysicalDeviceSurfacePresentModesKHR(*pDevice, *surface, &presentModeCount, details.presentModes.data());
 		if (result != VK_SUCCESS) {
-			details.success = false;
+			details.result = result;
 			return details;
 		}
 	}
 
-	details.success = true;
+	details.result = result;
 	return details;
 }
 
@@ -211,7 +299,7 @@ VkExtent2D VulkanSwapChain::ChooseExtent(const VkSurfaceCapabilitiesKHR& capabil
 		return capabilities.currentExtent;
 	}
 	else {
-		VkExtent2D actualExtent = { (uint32_t)VulkanSurfaceClass->width, (uint32_t)VulkanSurfaceClass->height };
+		VkExtent2D actualExtent = { (uint32_t)SurfaceClass->width, (uint32_t)SurfaceClass->height };
 
 		actualExtent.width = max(capabilities.minImageExtent.width, min(capabilities.maxImageExtent.width, actualExtent.width));
 		actualExtent.height = max(capabilities.minImageExtent.height, min(capabilities.maxImageExtent.height, actualExtent.height));

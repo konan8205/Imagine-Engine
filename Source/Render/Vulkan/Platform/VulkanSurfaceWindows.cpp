@@ -112,7 +112,7 @@ bool VulkanSurface::CreateWindowWin32(const int& _width, const int& _height)
 
 LRESULT CALLBACK VulkanSurface::WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-	VulkanSurface* VulkanSurfaceClass =
+	VulkanSurface* SurfaceClass =
 		static_cast<VulkanSurface*>((VulkanSurface*)GetWindowLongPtr(hWnd, GWLP_USERDATA));
 
 	switch (uMsg)
@@ -128,9 +128,9 @@ LRESULT CALLBACK VulkanSurface::WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPA
 	case WM_SIZE:
 		if (wParam != SIZE_MINIMIZED) {
 			// SetWindowLongPtr will be called after WM_SIZE called as first
-			if (VulkanSurfaceClass != NULL) {
-				VulkanSurfaceClass->width = lParam & 0xffff;
-				VulkanSurfaceClass->height = (lParam & 0xffff0000) >> 16;
+			if (SurfaceClass != NULL) {
+				SurfaceClass->width = lParam & 0xffff;
+				SurfaceClass->height = (lParam & 0xffff0000) >> 16;
 			}
 		}
 		break;

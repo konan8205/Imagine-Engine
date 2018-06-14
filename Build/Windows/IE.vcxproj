@@ -322,6 +322,8 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
     <ClInclude Include="D:\Workspace\Cpp\Imagine-Engine\Source\Render\Vulkan\VulkanFrameBuffer.h" />
     <ClInclude Include="D:\Workspace\Cpp\Imagine-Engine\Source\Render\Vulkan\VulkanHeader.h" />
     <ClInclude Include="D:\Workspace\Cpp\Imagine-Engine\Source\Render\Vulkan\VulkanPipeline.h" />
+    <ClInclude Include="D:\Workspace\Cpp\Imagine-Engine\Source\Render\Vulkan\VulkanQueue.h" />
+    <ClInclude Include="D:\Workspace\Cpp\Imagine-Engine\Source\Render\Vulkan\VulkanRenderPass.h" />
     <ClInclude Include="D:\Workspace\Cpp\Imagine-Engine\Source\Render\Vulkan\VulkanSwapchain.h" />
     <ClCompile Include="D:\Workspace\Cpp\Imagine-Engine\Source\Core\Console.cpp"  />
     <ClCompile Include="D:\Workspace\Cpp\Imagine-Engine\Source\Render\Vulkan\Platform\VulkanSurfaceWindows.cpp"  />
@@ -330,6 +332,8 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
     <ClCompile Include="D:\Workspace\Cpp\Imagine-Engine\Source\Render\Vulkan\VulkanDevice.cpp"  />
     <ClCompile Include="D:\Workspace\Cpp\Imagine-Engine\Source\Render\Vulkan\VulkanFrameBuffer.cpp"  />
     <ClCompile Include="D:\Workspace\Cpp\Imagine-Engine\Source\Render\Vulkan\VulkanPipeline.cpp"  />
+    <ClCompile Include="D:\Workspace\Cpp\Imagine-Engine\Source\Render\Vulkan\VulkanQueue.cpp"  />
+    <ClCompile Include="D:\Workspace\Cpp\Imagine-Engine\Source\Render\Vulkan\VulkanRenderPass.cpp"  />
     <ClCompile Include="D:\Workspace\Cpp\Imagine-Engine\Source\Render\Vulkan\VulkanSwapchain.cpp"  />
     <ClCompile Include="D:\Workspace\Cpp\Imagine-Engine\Source\main.cpp"  />
   </ItemGroup>

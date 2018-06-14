@@ -6,12 +6,12 @@
 #include "Render/Vulkan/Platform/VulkanSurfaceWindows.h"
 #endif
 
-class VulkanDevice;
 class VulkanSurface;
-struct VulkanPhysicalDevice;
+
+struct VulkanQueueFamilyStruct;
 
 struct VulkanSwapChainSupportDetails {
-	bool success = false;
+	VkResult result;
 	VkSurfaceCapabilitiesKHR capabilities;
 	vector<VkSurfaceFormatKHR> formats;
 	vector<VkPresentModeKHR> presentModes;
@@ -21,41 +21,60 @@ class VulkanSwapChain
 {
 	/* Variables */
 public:
-	// Parent class
-	const VulkanSurface* VulkanSurfaceClass;
-	VulkanPhysicalDevice* pDeviceStruct;
-	const VkDevice* device;
+	VkPhysicalDevice* pDevice;
+	VulkanQueueFamilyStruct * queueFamilyStruct;
+	VkDevice* device;
+	VulkanSurface* SurfaceClass;
+	
 
 	VkSwapchainKHR swapChain;
-	vector<VkImage> swapChainImages;
 	VkFormat swapChainImageFormat;
 	VkExtent2D swapChainExtent;
-	vector<VkImageView> swapChainImageViews;
-
-private:
-
+	vector<VkImage> swapChainImageList;
+	vector<VkImageView> swapChainImageViewList;
+	vector<VkSemaphore> imageAvailableSemaphoreList;
+	vector<VkSemaphore> renderFinishedSemaphoreList;
+	
 	/* Functions */
 public:
 	VulkanSwapChain(
-		VulkanSurface* _VulkanSurfaceClass,
-		VulkanPhysicalDevice* _pDeviceStruct,
-		VkDevice* _device);
+		VkPhysicalDevice* _pDevice,
+		VulkanQueueFamilyStruct* _queueFamilyStruct,
+		VkDevice* _device,
+		VulkanSurface* _SurfaceClass);
 	~VulkanSwapChain();
-	
-	bool CreateSwapChain();
-	bool RecreateSwapChain();
+
+	bool Initialize();
+	inline void DeInialize() {
+		DestroySemaphore_();
+		DestroyImageView();
+		DestroySwapChain();
+	}
+	VkResult AcquireImage(uint32_t _imageIndex);
+
+private:
+	VkResult CreateSwapChain();
 	inline void DestroySwapChain() {
 		vkDestroySwapchainKHR(*device, swapChain, NULL);
 	}
 
-	bool CreateImageView();
+	VkResult CreateImageView();
 	inline void DestroyImageView() {
-		for (VkImageView iter : swapChainImageViews) {
+		for (VkImageView iter : swapChainImageViewList) {
 			vkDestroyImageView(*device, iter, NULL);
 		}
 	}
 
-private:
+	VkResult CreateSemaphore_();
+	inline void DestroySemaphore_() {
+		for (VkSemaphore iter : renderFinishedSemaphoreList) {
+			vkDestroySemaphore(*device, iter, nullptr);
+		}
+		for (VkSemaphore iter : imageAvailableSemaphoreList) {
+			vkDestroySemaphore(*device, iter, nullptr);
+		}
+	}
+	
 	VulkanSwapChainSupportDetails QuerySupportDetails();
 	VkSurfaceFormatKHR ChooseSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& availableFormat);
 	VkPresentModeKHR ChoosePresentMode(const vector<VkPresentModeKHR> availablePresentMode);

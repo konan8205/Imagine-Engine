@@ -10,6 +10,9 @@ Vulkan::Vulkan(const VulkanCreateInfo _option)
 	, renderPassClass(nullptr)
 	, frameBufferClass(nullptr)
 	, graphicsPipelineClass(nullptr)
+	, queueClass(nullptr)
+	, currentFrame(UINT32_MAX)
+	, maxFrame(UINT32_MAX)
 	, bDisableMultiThreadRendering(false)
 	, bDisableMultiGPURendering(false)
 {
@@ -45,33 +48,13 @@ bool Vulkan::Initialize()
 #endif
 	};
 
-	VkResult result;
-
 	/* Create the vulkan instance */
-	result = CreateInstance();
-	if (result != VK_SUCCESS) {
+	if (CreateInstance() != VK_SUCCESS) {
 		throw runtime_error("Failed to create vulkan instance");
 		return false;
 	}
 
-	/* Create the logical device */
-	VulkanDeviceCreateInfo deviceCreateInfo;
-	deviceCreateInfo.bDisableMultiGPURendering = bDisableMultiGPURendering;
-	deviceClass = new VulkanDevice(this);
-	if (!deviceClass->Initialize(deviceCreateInfo)) {
-		return false;
-	}
-
-	/* Allocate command buffers */
-	VulkanCommandBufferCreateInfo cmdCreateInfo;
-	cmdCreateInfo.queueFamilyIndex = deviceClass->pDeviceStruct.graphicsQueueIndex;
-	cmdCreateInfo.cmdCount = thread::hardware_concurrency();
-	cmdClass = new VulkanCommandBuffer(&deviceClass->device);
-	if (!cmdClass->Initialize(cmdCreateInfo)) {
-		return false;
-	}
-
-	/* Create Surface */
+	/* Create surface */
 	VulkanSurfaceCreateInfo surfaceCreateInfo;
 	surfaceCreateInfo.width = 1280;
 	surfaceCreateInfo.height = 720;
@@ -80,59 +63,98 @@ bool Vulkan::Initialize()
 		return false;
 	}
 
-	/* Create Swap Chain */
-	swapChainClass = new VulkanSwapChain(surfaceClass, &deviceClass->pDeviceStruct, &deviceClass->device);
-	if (!swapChainClass->CreateSwapChain()) {
-		return false;
-	}
-	if (!swapChainClass->CreateImageView()) {
-		return false;
-	}
-
-	renderPassClass = new VulkanRenderPass(swapChainClass, &deviceClass->device);
-	if (!renderPassClass->CreateRenderPass()) {
+	/* Create the logical device */
+	VulkanDeviceCreateInfo deviceCreateInfo;
+	deviceCreateInfo.bDisableMultiGPURendering = bDisableMultiGPURendering;
+	deviceClass = new VulkanDevice(this, surfaceClass);
+	if (!deviceClass->Initialize(deviceCreateInfo)) {
 		return false;
 	}
 
-	frameBufferClass = new VulkanFrameBuffer(swapChainClass, renderPassClass, &deviceClass->device);
-	if (!frameBufferClass->CreateFrameBuffer()) {
+	/* Create swap Chain */
+	swapChainClass = new VulkanSwapChain(
+		deviceClass->pDevice,
+		&deviceClass->queueFamilyStruct,
+		&deviceClass->device,
+		surfaceClass);
+
+	if (!swapChainClass->Initialize()) {
+		return false;
+	}
+	maxFrame = (uint32_t)swapChainClass->swapChainImageList.size();
+
+	/* Create render pass */
+	renderPassClass = new VulkanRenderPass(&deviceClass->device, swapChainClass);
+	if (renderPassClass->CreateRenderPass() != VK_SUCCESS) {
 		return false;
 	}
 
-	graphicsPipelineClass = new VulkanGraphicsPipeline(swapChainClass, renderPassClass, &deviceClass->device);
+	/* Create frame buffers */
+	frameBufferClass = new VulkanFrameBuffer(&deviceClass->device, swapChainClass, renderPassClass);
+	if (frameBufferClass->CreateFrameBuffer() != VK_SUCCESS) {
+		return false;
+	}
 
-	if (!graphicsPipelineClass->CreateGraphicsPipeline()) {
+	/* Create graphics pipelines */
+	graphicsPipelineClass = new VulkanGraphicsPipeline(&deviceClass->device, swapChainClass, renderPassClass);
+	if (graphicsPipelineClass->CreateGraphicsPipeline() != VK_SUCCESS) {
 		return false;
 	}
 	
+	/* Allocate command buffers */
+	VulkanCommandBufferCreateInfo cmdCreateInfo;
+	cmdCreateInfo.queueFamilyIndex = deviceClass->queueFamilyStruct.graphicsQueueIndex;
+	cmdCreateInfo.cmdPoolCount = (uint32_t)thread::hardware_concurrency();
+	cmdCreateInfo.cmdCount = (uint32_t)frameBufferClass->frameBufferList.size();
+	cmdClass = new VulkanCommandBuffer(
+		&deviceClass->device,
+		swapChainClass,
+		frameBufferClass,
+		renderPassClass,
+		graphicsPipelineClass);
+
+	if (!cmdClass->Initialize(cmdCreateInfo)) {
+		return false;
+	}
+
+	queueClass = new VulkanQueue(&deviceClass->queueFamilyStruct, &deviceClass->device, swapChainClass, cmdClass);
+	queueClass->GetDeviceQueue();
+	currentFrame = 0;
+
 	return true;
 }
 
 void Vulkan::DeInitialize()
 {
+	vkDeviceWaitIdle(deviceClass->device);
+
+	delete queueClass;
+
+	/* Free command buffers */
+	cmdClass->DeInitialize();
+	delete cmdClass;
+
+	/* Clear graphics pipelines */
 	graphicsPipelineClass->DestroyGraphicsPipeline();
 	delete graphicsPipelineClass;
 
+	/* Clear frame buffers */
 	frameBufferClass->DestroyFrameBuffer();
 	delete frameBufferClass;
 
+	/* Clear render passes */
 	renderPassClass->DestroyRenderPass();
 	delete renderPassClass;
 
 	/* Clear swap chains */
-	swapChainClass->DestroyImageView();
-	swapChainClass->DestroySwapChain();
+	swapChainClass->DeInialize();
 	delete swapChainClass;
 
 	/* Clear surface */
 	surfaceClass->DeInitialize();
 	delete surfaceClass;
 
-	/* Clear command buffers */
-	cmdClass->DeInitialize();
-	delete cmdClass;
-
-	/* Clear logical and physical devices */
+	/* Clear logical device */
 	deviceClass->DeInitialize();
 	delete deviceClass;
 
@@ -145,7 +167,20 @@ void Vulkan::DeInitialize()
 
 bool Vulkan::Update()
 {
-	return true;
+	return false;
+}
+
+bool Vulkan::Render()
+{
+	cmdClass->Update();
+
+	queueClass->SubmitQueue(currentFrame);
+	queueClass->PresentQueue(currentFrame);
+
+	currentFrame = (currentFrame + 1) % (maxFrame + 1);
+
+	vkQueueWaitIdle(queueClass->presentQueue);
+	return false;
 }
 
 VkResult Vulkan::CreateInstance()

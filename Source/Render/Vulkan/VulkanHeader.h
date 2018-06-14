@@ -1,6 +1,7 @@
 #pragma once
 
 #include <vector>
+#include <set>
 #include <cstdint>
 #include <system_error>
 #include <cassert>

@@ -2,7 +2,7 @@
 
 #include "Render/Vulkan/VulkanHeader.h"
 #include "Render/Vulkan/VulkanSwapchain.h"
-#include "Render/Vulkan/VulkanFrameBuffer.h"
+#include "Render/Vulkan/VulkanRenderPass.h"
 
 class VulkanSwapChain;
 class VulkanRenderPass;
@@ -11,9 +11,9 @@ class VulkanGraphicsPipeline
 {
 	/* Variables */
 public:
+	VkDevice* device;
 	VulkanSwapChain* SwapChainClass;
 	VulkanRenderPass* RenderPassClass;
-	VkDevice* device;
 	
 	VkPipelineLayout pipelineLayout;
 	VkPipeline graphicsPipeline;
@@ -21,9 +21,9 @@ public:
 	/* Functions */
 public:
 	VulkanGraphicsPipeline(
+		VkDevice* _device,
 		VulkanSwapChain* _SwapChainClass,
-		VulkanRenderPass* RenderPassClass,
-		VkDevice* _device);
+		VulkanRenderPass* RenderPassClass);
 	~VulkanGraphicsPipeline();
 
 	VkShaderModule CreateShaderModule(const vector<char>& _code);
@@ -31,7 +31,7 @@ public:
 		vkDestroyShaderModule(*device, _shaderModule, NULL);
 	}
 
-	bool CreateGraphicsPipeline();
+	VkResult CreateGraphicsPipeline();
 	inline void DestroyGraphicsPipeline() {
 		vkDestroyPipeline(*device, graphicsPipeline, NULL);
 		vkDestroyPipelineLayout(*device, pipelineLayout, NULL);
