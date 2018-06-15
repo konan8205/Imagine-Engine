@@ -33,27 +33,24 @@ VkResult VulkanQueue::SubmitQueue(const uint32_t _imageIndex)
 	
 	VkSemaphore waitSemaphores[] = { SwapChainClass->imageAvailableSemaphoreList[_imageIndex] };
 	VkPipelineStageFlags waitStages[] = { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
-	VkCommandBuffer* cmdList = new VkCommandBuffer[CmdClass->cmdStructList.size()];
-	for (uint32_t i = 0; i < CmdClass->cmdStructList.size(); ++i) {
-		cmdList[i] = CmdClass->cmdStructList[i].cmdList[_imageIndex];
-	}
-
 	submitInfo.waitSemaphoreCount = 1;
 	submitInfo.pWaitSemaphores = waitSemaphores;
 	submitInfo.pWaitDstStageMask = waitStages;
-	submitInfo.commandBufferCount = (uint32_t)CmdClass->cmdStructList.size();
-	submitInfo.pCommandBuffers = cmdList;
 
+	submitInfo.commandBufferCount = 1;
+	submitInfo.pCommandBuffers = &CmdClass->cmdStructList[0].cmdList[_imageIndex];
+	
 	VkSemaphore signalSemaphores[] = { SwapChainClass->renderFinishedSemaphoreList[_imageIndex] };
 	submitInfo.signalSemaphoreCount = 1;
 	submitInfo.pSignalSemaphores = signalSemaphores;
+	
+	submitInfo.waitSemaphoreCount = 0;
+	submitInfo.signalSemaphoreCount = 0;
 
 	VkResult result = vkQueueSubmit(graphicsQueue, 1, &submitInfo, VK_NULL_HANDLE);
 
 	if (result != VK_SUCCESS) {
-#ifdef _DEBUG
-		
-#endif
+		assert(result == VK_SUCCESS);
 		throw std::runtime_error("Failed to submit draw command buffer");
 	}
 
@@ -78,7 +75,8 @@ VkResult VulkanQueue::PresentQueue(const uint32_t _imageIndex)
 
 	VkResult result = vkQueuePresentKHR(presentQueue, &presentInfo);
 
-	if (result != VK_SUCCESS) {
+	if (result != VK_SUCCESS &&
+		result != VK_ERROR_OUT_OF_DATE_KHR) {
 		throw std::runtime_error("Failed to present swapchain");
 	}
 

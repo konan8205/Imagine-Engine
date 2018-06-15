@@ -81,7 +81,7 @@ bool Vulkan::Initialize()
 	if (!swapChainClass->Initialize()) {
 		return false;
 	}
-	maxFrame = (uint32_t)swapChainClass->swapChainImageList.size();
+	maxFrame = (uint32_t)swapChainClass->swapChainImageList.size() - 1;
 
 	/* Create render pass */
 	renderPassClass = new VulkanRenderPass(&deviceClass->device, swapChainClass);
@@ -104,7 +104,8 @@ bool Vulkan::Initialize()
 	/* Allocate command buffers */
 	VulkanCommandBufferCreateInfo cmdCreateInfo;
 	cmdCreateInfo.queueFamilyIndex = deviceClass->queueFamilyStruct.graphicsQueueIndex;
-	cmdCreateInfo.cmdPoolCount = (uint32_t)thread::hardware_concurrency();
+	//cmdCreateInfo.cmdPoolCount = thread::hardware_concurrency();
+	cmdCreateInfo.cmdPoolCount = 1;
 	cmdCreateInfo.cmdCount = (uint32_t)frameBufferClass->frameBufferList.size();
 	cmdClass = new VulkanCommandBuffer(
 		&deviceClass->device,

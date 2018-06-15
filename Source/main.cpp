@@ -50,7 +50,6 @@ int main()
 		}
 #endif
 	}
-	
 
 	vulkan->DeInitialize();
 	delete vulkan;

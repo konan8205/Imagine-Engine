@@ -62,21 +62,10 @@ VkResult VulkanCommandBuffer::Update()
 
 	for (uint32_t i = 0; i < cmdStructList.size(); i++) {
 		for (uint32_t j = 0; j < cmdStructList[i].cmdList.size(); j++) {
-
-			VkCommandBufferInheritanceInfo cmdBufInheritInfo = {};
-			cmdBufInheritInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_INHERITANCE_INFO;
-			cmdBufInheritInfo.pNext = NULL;
-			cmdBufInheritInfo.renderPass = VK_NULL_HANDLE;
-			cmdBufInheritInfo.subpass = 0;
-			cmdBufInheritInfo.framebuffer = VK_NULL_HANDLE;
-			cmdBufInheritInfo.occlusionQueryEnable = VK_FALSE;
-			cmdBufInheritInfo.queryFlags = 0;
-			cmdBufInheritInfo.pipelineStatistics = 0;
-
+			
 			VkCommandBufferBeginInfo beginInfo = {};
 			beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
 			beginInfo.flags = VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT;
-			beginInfo.pInheritanceInfo = &cmdBufInheritInfo;
 
 			result = vkBeginCommandBuffer(cmdStructList[i].cmdList[j], &beginInfo);
 			if (result != VK_SUCCESS) {
@@ -90,12 +79,9 @@ VkResult VulkanCommandBuffer::Update()
 			renderPassInfo.renderArea.offset = { 0, 0 };
 			renderPassInfo.renderArea.extent = SwapChainClass->swapChainExtent;
 
-			VkClearValue* clearValues = new VkClearValue[2];
-			clearValues[0].color = { 0.0f, 0.0f, 0.0f, 1.0f };
-			clearValues[1].depthStencil = { 1.0f, 0 };
-
-			renderPassInfo.clearValueCount = 2;
-			renderPassInfo.pClearValues = clearValues;
+			VkClearValue clearColor = { 0.0f, 0.0f, 0.0f, 1.0f };
+			renderPassInfo.clearValueCount = 1;
+			renderPassInfo.pClearValues = &clearColor;
 
 			vkCmdBeginRenderPass(cmdStructList[i].cmdList[j], &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
 
@@ -104,15 +90,7 @@ VkResult VulkanCommandBuffer::Update()
 				VK_PIPELINE_BIND_POINT_GRAPHICS,
 				GraphicsPipelineClass->graphicsPipeline);
 
-			//VkBuffer vertexBuffers[] = { vertexBuffer };
-			//VkDeviceSize offsets[] = { 0 };
-			//vkCmdBindVertexBuffers(cmdStructList[i].cmdList[j], 0, 1, vertexBuffers, offsets);
-
-			//vkCmdBindIndexBuffer(ccmdStructList[i].cmdList[j], indexBuffer, 0, VK_INDEX_TYPE_UINT32);
-
-			//vkCmdBindDescriptorSets(cmdStructList[i].cmdList[j], VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, &descriptorSet, 0, nullptr);
-
-			//vkCmdDrawIndexed(cmdStructList[i].cmdList[j], static_cast<uint32_t>(indices.size()), 1, 0, 0, 0);
+			vkCmdDraw(cmdStructList[i].cmdList[j], 3, 1, 0, 0);
 
 			vkCmdEndRenderPass(cmdStructList[i].cmdList[j]);
 
