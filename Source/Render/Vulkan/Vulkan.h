@@ -9,15 +9,18 @@
 #include "Render/Vulkan/VulkanFrameBuffer.h"
 #include "Render/Vulkan/VulkanPipeline.h"
 #include "Render/Vulkan/VulkanQueue.h"
+#include "Render/Vulkan/VulkanVertexBuffer.h"
 
-#ifdef _WIN32
+#include "Render/Vulkan/Platform/VulkanSurface.h"
+#if defined(_WIN32)
 #include "Render/Vulkan/Platform/VulkanSurfaceWindows.h"
+#elif defined(__linux__)
+#include "Render/Vulkan/Platform/VulkanSurfaceLinux.h"
 #endif
 
 #include <fstream>
 
 class VulkanDevice;
-class VulkanSurface;
 class VulkanSwapChain;
 class VulkanRenderPass;
 class VulkanFrameBuffer;
@@ -25,9 +28,15 @@ class VulkanGraphicsPipeline;
 class VulkanCommandBuffer;
 class VulkanQueue;
 
+#if defined(_WIN32)
+class VulkanSurfaceWindows;
+#elif defined(__linux__)
+class VulkanSurfaceWayland;
+#endif
+
 struct VulkanCreateInfo
 {
-	const char* appName = CoreInfo::GetEngineName();
+	const wchar_t* appName = CoreInfo::GetEngineName();
 	uint32_t appVersion = CoreInfo::GetEngineVer();
 };
 
@@ -45,12 +54,18 @@ public:
 	VkInstance instance;
 	VulkanDevice* deviceClass;
 	VulkanCommandBuffer* cmdClass;
-	VulkanSurface* surfaceClass;
 	VulkanSwapChain* swapChainClass;
 	VulkanRenderPass* renderPassClass;
 	VulkanFrameBuffer* frameBufferClass;
 	VulkanGraphicsPipeline* graphicsPipelineClass;
+	VulkanVertexBuffer* vertexBufferClass;
 	VulkanQueue* queueClass;
+
+#if defined(_WIN32)
+	VulkanSurfaceWindows* surfaceClass;
+#elif defined(__linux__)
+	VulkanSurfaceLinux* surfaceClass;
+#endif
 
 	uint32_t currentFrame;
 	uint32_t maxFrame;
@@ -65,10 +80,11 @@ private:
 	
 	/* Functions */
 public:
-	Vulkan(const VulkanCreateInfo _option);
+	Vulkan();
 	~Vulkan();
 
-	bool Initialize();
+	bool Initialize(const VulkanCreateInfo _createInfo);
+	//bool ReInitialize();
 	void DeInitialize();
 	bool Update();
 	bool Render();

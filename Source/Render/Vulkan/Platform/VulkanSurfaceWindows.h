@@ -1,53 +1,43 @@
-#ifdef _WIN32
 #pragma once
 
+#ifdef _WIN32
 #include "Render/Vulkan/VulkanHeader.h"
 #include "Render/Vulkan/Vulkan.h"
 
+#include "Render/Vulkan/Platform/VulkanSurface.h"
+
 #include <windows.h>
+#ifndef UNICODE
+#error UNICODE must be defined
+#endif
 
 class Vulkan;
+class VulkanSurface;
 
-struct VulkanSurfaceCreateInfo {
-	int width;
-	int height;
-};
+struct WindowCreateInfo;
+enum class VulkanSurfaceType;
 
-class VulkanSurface
+class VulkanSurfaceWindows : public VulkanSurface
 {
 	/* Variables */
-public:
-	// Parent class
-	Vulkan* VulkanClass;
-	VkInstance* instance;
-
-	VkSurfaceKHR surface;
-	int width;
-	int height;
-
 private:
 	HINSTANCE hInstance;
 	HWND hWnd;
 
 	/* Functions */
 public:
-	VulkanSurface(Vulkan* _VulkanClass);
-	~VulkanSurface();
+	VulkanSurfaceWindows(VkInstance* _instance);
+	~VulkanSurfaceWindows();
 
-	bool Initialize(VulkanSurfaceCreateInfo _createInfo);
-	inline void DeInitialize() {
-		DestroySurface();
+	bool CreateWindowWin32(const WindowCreateInfo& _createInfo);
+	inline void DestroyWindowWin32() {
 		DestroyWindow(hWnd);
 	}
-	bool Render();
-	
-private:
+	bool SetWindowAttributeWin32(const WindowCreateInfo& _createInfo);
 	bool CreateSurface();
-	void DestroySurface() {
-		vkDestroySurfaceKHR(*instance, surface, NULL);
-	}
+	bool Render();
 
-	bool CreateWindowWin32(const int& width, const int& height);
+private:
 	static LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 };
 #endif

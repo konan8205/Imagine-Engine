@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Render/Vulkan/VulkanHeader.h"
-#include "Render/Vulkan/VulkanSwapchain.h"
+#include "Render/Vulkan/VulkanSwapChain.h"
 
 class VulkanSwapChain;
 

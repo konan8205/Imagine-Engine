@@ -2,7 +2,7 @@
 
 #include "Render/Vulkan/VulkanHeader.h"
 #include "Render/Vulkan/VulkanDevice.h"
-#include "Render/Vulkan/VulkanSwapchain.h"
+#include "Render/Vulkan/VulkanSwapChain.h"
 #include "Render/Vulkan/VulkanCommandBuffer.h"
 
 class VulkanSwapChain;

@@ -15,14 +15,11 @@ using namespace std;
 
 int main()
 {
-	VulkanCreateInfo vulkanCreateInfo;
-	vulkanCreateInfo.appName = "Imagine Engine Sample";
-	vulkanCreateInfo.appVersion = 1;
-
-	Vulkan* vulkan = new Vulkan(vulkanCreateInfo);
+	Vulkan* vulkan = new Vulkan();
 	
 	try {
-		if (!vulkan->Initialize()) {
+		VulkanCreateInfo vulkanCreateInfo;
+		if (!vulkan->Initialize(vulkanCreateInfo)) {
 #if defined(_WIN32) && defined(_DEBUG)
 			system("pause");
 			return 0;

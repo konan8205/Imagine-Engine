@@ -4,10 +4,7 @@
 
 namespace CoreInfo
 {
-	inline const char* GetEngineName() {
-		return "Imagine Engine";
-	}
-	inline const wchar_t* GetEngineNameL() {
+	inline const wchar_t* GetEngineName() {
 		return L"Imagine Engine";
 	}
 	inline const uint32_t GetEngineVer() {

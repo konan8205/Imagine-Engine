@@ -4,10 +4,12 @@
 VulkanGraphicsPipeline::VulkanGraphicsPipeline(
 	VkDevice* _device,
 	VulkanSwapChain* _SwapChainClass,
-	VulkanRenderPass* _RenderPassClass)
+	VulkanRenderPass* _RenderPassClass,
+	VulkanVertexBuffer* _VertexBufferClass)
 	: device(_device)
 	, SwapChainClass(_SwapChainClass)
 	, RenderPassClass(_RenderPassClass)
+	, VertexBufferClass(_VertexBufferClass)
 {
 
 }
@@ -64,15 +66,18 @@ VkResult VulkanGraphicsPipeline::CreateGraphicsPipeline()
 	fragShaderStageInfo.stage = VK_SHADER_STAGE_FRAGMENT_BIT;
 	fragShaderStageInfo.module = fragShaderModule;
 	fragShaderStageInfo.pName = "main";
-
+	
 	VkPipelineShaderStageCreateInfo shaderStages[] = { vertShaderStageInfo, fragShaderStageInfo };
+
+	auto bindingDescription = VulkanVertex::GetBindingDescription();
+	auto attributeDescriptions = VulkanVertex::GetAttributeDescriptions();
 
 	VkPipelineVertexInputStateCreateInfo vertexInputInfo = {};
 	vertexInputInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
-	vertexInputInfo.vertexBindingDescriptionCount = 0;
-	vertexInputInfo.pVertexBindingDescriptions = NULL; // Optional
-	vertexInputInfo.vertexAttributeDescriptionCount = 0;
-	vertexInputInfo.pVertexAttributeDescriptions = NULL; // Optional
+	vertexInputInfo.vertexBindingDescriptionCount = 1;
+	vertexInputInfo.pVertexBindingDescriptions = &bindingDescription;
+	vertexInputInfo.vertexAttributeDescriptionCount = static_cast<uint32_t>(attributeDescriptions.size());
+	vertexInputInfo.pVertexAttributeDescriptions = attributeDescriptions.data();
 
 	VkPipelineInputAssemblyStateCreateInfo inputAssembly = {};
 	inputAssembly.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;

@@ -1,8 +1,10 @@
 #pragma once
 
 #include <vector>
-#include <set>
+#include <array>
 #include <cstdint>
+#include <cwchar>
+
 #include <system_error>
 #include <cassert>
 
@@ -10,6 +12,7 @@
 #include <thread>
 
 #include "vulkan/vulkan.h"
+#include "glm.hpp"
 
 #include "Core/CoreInfo.h"
 

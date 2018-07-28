@@ -1,10 +1,13 @@
 #pragma once
 
 #include "Render/Vulkan/VulkanHeader.h"
-#include "Render/Vulkan/Vulkan.h"
-#include "Render/Vulkan/VulkanSwapchain.h"
+#include "Render/Vulkan/VulkanSwapChain.h"
 #include "Render/Vulkan/VulkanRenderPass.h"
 #include "Render/Vulkan/VulkanFrameBuffer.h"
+
+#include "Render/Vulkan/VulkanVertexBuffer.h"
+#include "Render/Vulkan/VulkanPipeline.h"
+
 
 class VulkanSwapChain;
 class VulkanFrameBuffer;
@@ -31,9 +34,11 @@ public:
 	VulkanFrameBuffer* FrameBufferClass;
 	VulkanRenderPass* RenderPassClass;
 	VulkanGraphicsPipeline* GraphicsPipelineClass;
-
+	VulkanVertexBuffer* VertexBufferClass;
 	uint32_t queueFamilyIndex;
+
 	vector<VulkanCommandStruct> cmdStructList;
+
 private:
 
 	/* Functions */
@@ -43,7 +48,8 @@ public:
 		VulkanSwapChain* _SwapChainClass,
 		VulkanFrameBuffer* _FrameBufferClass,
 		VulkanRenderPass* _RenderPassClass,
-		VulkanGraphicsPipeline* _GraphicsPipelineClass);
+		VulkanGraphicsPipeline* _GraphicsPipelineClass,
+		VulkanVertexBuffer* _VertexBufferClass);
 	~VulkanCommandBuffer();
 
 	bool Initialize(VulkanCommandBufferCreateInfo _createInfo);
@@ -52,7 +58,7 @@ public:
 		DestroyAllCommandPool();
 	}
 	
-	VkResult Update();
+	VkResult Update(uint32_t _cmdPoolIndex, uint32_t _cmdIndex);
 
 private:
 	VkResult CreateCommandPool(const uint32_t _cmdPoolIndex, const uint32_t _queueFamilyIndex);

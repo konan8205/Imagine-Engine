@@ -1,9 +1,8 @@
 
 #include "Render/Vulkan/Vulkan.h"
 
-Vulkan::Vulkan(const VulkanCreateInfo _option)
-	: option(_option)
-	, deviceClass(nullptr)
+Vulkan::Vulkan()
+	: deviceClass(nullptr)
 	, cmdClass(nullptr)
 	, surfaceClass(nullptr)
 	, swapChainClass(nullptr)
@@ -24,7 +23,7 @@ Vulkan::~Vulkan()
 
 }
 
-bool Vulkan::Initialize()
+bool Vulkan::Initialize(const VulkanCreateInfo _createInfo)
 {
 #ifdef _DEBUG
 	/* Debug options of vulkan instance */
@@ -43,10 +42,21 @@ bool Vulkan::Initialize()
 		VK_EXT_DEBUG_REPORT_EXTENSION_NAME,
 #endif
 		VK_KHR_SURFACE_EXTENSION_NAME,
-#ifdef _WIN32
+#if defined(__ANDROID__)
+		VK_USE_PLATFORM_ANDROID_KHR,
+#elif defined(__APPLE__)
+		VK_MVK_MACOS_SURFACE_EXTENSION_NAME,
+#elif defined(__linux__)
+		VK_KHR_WAYLAND_SURFACE_EXTENSION_NAME,
+		VK_KHR_XCB_SURFACE_EXTENSION_NAME,
+		VK_KHR_XLIB_SURFACE_EXTENSION_NAME,
+		VK_EXT_ACQUIRE_XLIB_DISPLAY_EXTENSION_NAME,
+#elif defined(_WIN32)
 		VK_KHR_WIN32_SURFACE_EXTENSION_NAME,
 #endif
 	};
+
+	option = _createInfo;
 
 	/* Create the vulkan instance */
 	if (CreateInstance() != VK_SUCCESS) {
@@ -55,13 +65,19 @@ bool Vulkan::Initialize()
 	}
 
 	/* Create surface */
-	VulkanSurfaceCreateInfo surfaceCreateInfo;
-	surfaceCreateInfo.width = 1280;
-	surfaceCreateInfo.height = 720;
-	surfaceClass = new VulkanSurface(this);
-	if (!surfaceClass->Initialize(surfaceCreateInfo)) {
+	WindowCreateInfo windowCreateInfo;
+	windowCreateInfo.width = 1280;
+	windowCreateInfo.height = 720;
+	windowCreateInfo.title = option.appName;
+	windowCreateInfo.resizable = true;
+
+#if defined(_WIN32)
+	surfaceClass = new VulkanSurfaceWindows(&instance);
+	if (!surfaceClass->CreateWindowWin32(windowCreateInfo) ||
+		!surfaceClass->CreateSurface()) {
 		return false;
 	}
+#endif
 
 	/* Create the logical device */
 	VulkanDeviceCreateInfo deviceCreateInfo;
@@ -95,16 +111,24 @@ bool Vulkan::Initialize()
 		return false;
 	}
 
+	/* Create and allocate vertex buffers */
+	vertexBufferClass = new VulkanVertexBuffer(deviceClass->pDevice, &deviceClass->device);
+	if (vertexBufferClass->CreateVertexBuffer(sizeof(VulkanVertex) * vertices.size())) {
+		return false;
+	}
+	if (vertexBufferClass->AllocateMemory(vertices.data(), sizeof(VulkanVertex) * vertices.size())) {
+		return false;
+	}
+
 	/* Create graphics pipelines */
-	graphicsPipelineClass = new VulkanGraphicsPipeline(&deviceClass->device, swapChainClass, renderPassClass);
+	graphicsPipelineClass = new VulkanGraphicsPipeline(&deviceClass->device, swapChainClass, renderPassClass, vertexBufferClass);
 	if (graphicsPipelineClass->CreateGraphicsPipeline() != VK_SUCCESS) {
 		return false;
 	}
-	
+
 	/* Allocate command buffers */
 	VulkanCommandBufferCreateInfo cmdCreateInfo;
 	cmdCreateInfo.queueFamilyIndex = deviceClass->queueFamilyStruct.graphicsQueueIndex;
-	//cmdCreateInfo.cmdPoolCount = thread::hardware_concurrency();
 	cmdCreateInfo.cmdPoolCount = 1;
 	cmdCreateInfo.cmdCount = (uint32_t)frameBufferClass->frameBufferList.size();
 	cmdClass = new VulkanCommandBuffer(
@@ -112,7 +136,8 @@ bool Vulkan::Initialize()
 		swapChainClass,
 		frameBufferClass,
 		renderPassClass,
-		graphicsPipelineClass);
+		graphicsPipelineClass,
+		vertexBufferClass);
 
 	if (!cmdClass->Initialize(cmdCreateInfo)) {
 		return false;
@@ -128,7 +153,6 @@ bool Vulkan::Initialize()
 void Vulkan::DeInitialize()
 {
 	vkDeviceWaitIdle(deviceClass->device);
-
 	delete queueClass;
 
 	/* Free command buffers */
@@ -138,6 +162,11 @@ void Vulkan::DeInitialize()
 	/* Clear graphics pipelines */
 	graphicsPipelineClass->DestroyGraphicsPipeline();
 	delete graphicsPipelineClass;
+
+	/* Free vertex buffers */
+	vertexBufferClass->FreeMemory();
+	vertexBufferClass->DestroyVertexBuffer();
+	delete vertexBufferClass;
 
 	/* Clear frame buffers */
 	frameBufferClass->DestroyFrameBuffer();
@@ -152,7 +181,10 @@ void Vulkan::DeInitialize()
 	delete swapChainClass;
 
 	/* Clear surface */
-	surfaceClass->DeInitialize();
+	surfaceClass->DestroySurface();
+#if defined(_WIN32)
+	surfaceClass->DestroyWindowWin32();
+#endif
 	delete surfaceClass;
 
 	/* Clear logical device */
@@ -173,7 +205,9 @@ bool Vulkan::Update()
 
 bool Vulkan::Render()
 {
-	cmdClass->Update();
+	cmdClass->Update(0, currentFrame);
+
+	swapChainClass->AcquireImage(currentFrame);
 
 	queueClass->SubmitQueue(currentFrame);
 	queueClass->PresentQueue(currentFrame);
@@ -186,12 +220,22 @@ bool Vulkan::Render()
 
 VkResult Vulkan::CreateInstance()
 {
+	// Convert app name
+	size_t appNameSize = wcslen(option.appName) + 1;
+	char* appName = new char[appNameSize];
+	wcstombs(appName, option.appName, appNameSize);
+	
+	// Convert engine name
+	size_t engineNameSize = wcslen(CoreInfo::GetEngineName()) + 1;
+	char* engineName = new char[engineNameSize];
+	wcstombs(engineName, CoreInfo::GetEngineName(), engineNameSize);
+
 	VkApplicationInfo appInfo;
 	appInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
 	appInfo.pNext = NULL;
-	appInfo.pApplicationName = option.appName;
+	appInfo.pApplicationName = appName;
 	appInfo.applicationVersion = option.appVersion;
-	appInfo.pEngineName = CoreInfo::GetEngineName();
+	appInfo.pEngineName = engineName;
 	appInfo.engineVersion = CoreInfo::GetEngineVer();
 #if defined(__ANDROID__) || defined(TARGET_OS_IPHONE)
 	appInfo.apiVersion = VK_API_VERSION_1_0;

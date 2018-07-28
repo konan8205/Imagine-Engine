@@ -4,6 +4,7 @@
 VulkanDevice::VulkanDevice(Vulkan* _VulkanClass, VulkanSurface* _SurfaceClass)
 	: VulkanClass(_VulkanClass)
 	, SurfaceClass(_SurfaceClass)
+	, pDevice(NULL)
 {
 
 }
@@ -146,7 +147,7 @@ VkResult VulkanDevice::CreateDevice(
 	VkResult result;
 
 	vector<VkDeviceQueueCreateInfo> queueInfoList;
-	set<uint32_t> queueFamilyList = {
+	uint32_t queueFamilyList[] = {
 		_queueFamilyStruct.graphicsQueueIndex,
 		_queueFamilyStruct.presentQueueIndex
 	};
